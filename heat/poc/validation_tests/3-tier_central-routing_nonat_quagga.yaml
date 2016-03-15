@@ -260,7 +260,6 @@ resources:
       user_data_format: RAW
       user_data:
         str_replace:
-          params:
           template: |
             #!/bin/bash
             # install Quagga
