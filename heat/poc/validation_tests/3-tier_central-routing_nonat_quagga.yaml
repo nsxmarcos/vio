@@ -5,7 +5,7 @@ description: |
   and 1 DB Server on private networks and attaches them to security groups (HOT template in YAML).
   Since this is a NO-NAT template this MUST be done by an OpenStack Admin. The Teamplate also spins up
   a QuaGGA VM on a provider network, on the same L2 as the external network, and starts a BGP
-  process to establish a dynamic routing adjacency with an external BGP speaker.
+  process to establish a dynamic routing adjacency with an external BGP Speaker.
 
 parameters:
   external_network_id:
