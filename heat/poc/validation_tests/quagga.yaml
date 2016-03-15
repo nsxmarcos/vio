@@ -1,0 +1,77 @@
+heat_template_version: 2015-04-30
+
+description: |
+  A simple Heat template that spins up a 3 Tier App with 1 Web Server, 1 App Server,
+  and 1 DB Server on private networks and attaches them to security groups (HOT template in YAML).
+  Since this is a NO-NAT template this MUST be done by an OpenStack Admin. The Teamplate also spins up
+  a QuaGGA VM on a provider network, on the same L2 as the external network, and starts a BGP
+  process to establish a dynamic routing adjacency with an external BGP Speaker.
+
+parameters:
+  provider_network_id:
+    type: string
+    label: provider-net
+    description: UUID of a Neutron Provider network
+    default: f4c2faec-9618-4f7b-a19a-7a0f198b5bb2
+
+  provider_subnet_id:
+    type: string
+    label: provider-subnet
+    description: UUID of a Neutron Provider subnet
+    default: 8dad5c18-64b7-4706-9ff9-e99edc0287ae
+
+  quagga_image:
+    type: string
+    description: Name of image to use for servers
+    default: ubuntu-14.04-server-amd64
+
+  flavor:
+    type: string
+    label: Flavor name
+    description: Name of the flavor to be used for the instances.
+    default: m1.small
+
+  dns:
+    type: string
+    label: DNS nameserver
+    description: Comma separated list of DNS nameservers for the private network
+    default: "10.148.152.8"
+
+resources:
+  quagga_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Allow all traffic
+      name: quagga-security-group
+      rules: [{direction: ingress, remote_ip_prefix: 0.0.0.0/0, port_range_min: 0, port_range_max: 65535, protocol: tcp} ]
+
+  # Create port(s) on Provider Network.
+  quagga-svr-01_port0:
+    type: OS::Neutron::Port
+    properties:
+      admin_state_up: true
+      network_id: f4c2faec-9618-4f7b-a19a-7a0f198b5bb2
+      security_groups:
+        - { get_resource: quagga_security_group }
+
+  quagga-svr-01:
+    type: OS::Nova::Server
+    depends_on: web-svr-01
+    properties:
+      name: quaga-instance-01
+      image: { get_param: quagga_image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: quagga-svr-01_port0 }
+      user_data_format: RAW
+      user_data: |
+        #!/bin/bash -ex
+        # install Quagga
+        echo "Installing Quagga"
+        apt-get update -q -y
+        apt-get install -y quagga
+
+outputs:
+  quagga-svr-01_ip:
+    description: IP address of Quagga instance
+    value: { get_attr: [ quagga-svr-01, first_address ] }
