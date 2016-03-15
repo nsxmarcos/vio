@@ -5,16 +5,16 @@ description: |
   and 1 DB Server on private networks and attaches them to security groups (HOT template in YAML).
   Since this is a NO-NAT template this MUST be done by an OpenStack Admin. The Teamplate also spins up
   a QuaGGA VM on a provider network, on the same L2 as the external network, and starts a BGP
-  process to establish a dynamic routing adjacency with an external BGP spoeaker.
+  process to establish a dynamic routing adjacency with an external BGP Speaker.
 
 parameters:
-  external_network_id:
+ external_network_id:
     type: string
     label: ext-net
     description: UUID of a Neutron external network
     default: e70e3478-049d-425a-98f9-bc5ebb29d8c8
 
-provider_network_id:
+ provider_network_id:
     type: string
     label: provider-net
     description: UUID of a Neutron Provider network
@@ -26,33 +26,33 @@ provider_subnet_id:
     description: UUID of a Neutron Provider subnet
     default: 8dad5c18-64b7-4706-9ff9-e99edc0287ae
 
-  web_image:
+    web_image:
     type: string
     description: Name of image to use for servers
     default: ubuntu-14.04-server-amd64
 
-  app_image:
+    app_image:
     type: string
     description: Name of image to use for servers
     default: ubuntu-14.04-server-amd64
 
-  db_image:
+    db_image:
     type: string
     description: Name of image to use for servers
     default: ubuntu-14.04-server-amd64
 
-  quagga_image:
+    quagga_image:
     type: string
     description: Name of image to use for servers
     default: ubuntu-14.04-server-amd64
 
-  flavor:
+    flavor:
     type: string
     label: Flavor name
     description: Name of the flavor to be used for the instances.
     default: m1.small
 
-  dns:
+    dns:
     type: string
     label: DNS nameserver
     description: Comma separated list of DNS nameservers for the private network
