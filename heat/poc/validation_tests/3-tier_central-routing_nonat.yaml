@@ -10,7 +10,7 @@ parameters:
     type: string
     label: ext-net
     description: UUID of a Neutron external network
-    default: 995cf315-8d49-427e-aa16-16051bab37aa
+    default: 9e70e3478-049d-425a-98f9-bc5ebb29d8c8
 
   web_image:
     type: string
@@ -37,7 +37,7 @@ parameters:
     type: string
     label: DNS nameserver
     description: Comma separated list of DNS nameservers for the private network
-    default: "8.8.8.8"
+    default: "10.148.152.8"
 
 resources:
   # Create the web logical switch and configure DHCP.
