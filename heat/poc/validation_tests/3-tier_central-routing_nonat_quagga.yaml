@@ -18,7 +18,7 @@ parameters:
     type: string
     label: provider-net
     description: UUID of a Neutron Provider network
-    default:
+    default: f4c2faec-9618-4f7b-a19a-7a0f198b5bb2
 
   provider_subnet_id:
     type: string
