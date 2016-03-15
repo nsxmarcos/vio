@@ -20,12 +20,6 @@ parameters:
     description: UUID of a Neutron Provider network
     default: f4c2faec-9618-4f7b-a19a-7a0f198b5bb2
 
- provider_subnet_id:
-    type: string
-    label: provider-subnet
-    description: UUID of a Neutron Provider subnet
-    default: 8dad5c18-64b7-4706-9ff9-e99edc0287ae
-
     web_image:
     type: string
     description: Name of image to use for servers
