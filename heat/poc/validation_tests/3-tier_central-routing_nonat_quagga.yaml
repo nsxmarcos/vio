@@ -258,14 +258,12 @@ resources:
       networks:
         - port: { get_resource: quagga-svr-01_port0 }
       user_data_format: RAW
-      user_data:
-        str_replace:
-          template: |
-            #!/bin/bash
-            # install Quagga
-            apt-get update
-            export DEBIAN_FRONTEND=noninteractive
-            apt-get install -y quagga
+      user_data: |
+        #!/bin/bash
+        # install Quagga
+        apt-get update
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get install -y quagga
 
 outputs:
   web-svr-01_private_ip:
