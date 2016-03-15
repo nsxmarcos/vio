@@ -18,7 +18,7 @@ parameters:
     type: string
     label: provider-net
     description: UUID of a Neutron Provider network
-    default: f4c2faec-9618-4f7b-a19a-7a0f198b5bb2
+    default:
 
   provider_subnet_id:
     type: string
@@ -214,7 +214,7 @@ resources:
     type: OS::Neutron::Port
     properties:
       admin_state_up: true
-      network_id: { get_resource: provider_network_id }
+      network_id: f4c2faec-9618-4f7b-a19a-7a0f198b5bb2
       security_groups:
         - { get_resource: quagga_security_group }
 
