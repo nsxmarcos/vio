@@ -257,6 +257,16 @@ resources:
       flavor: { get_param: flavor }
       networks:
         - port: { get_resource: quagga-svr-01_port0 }
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          params:
+          template: |
+            #!/bin/bash
+            # install Quagga
+            apt-get update
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get install -y quagga
 
 outputs:
   web-svr-01_private_ip:
