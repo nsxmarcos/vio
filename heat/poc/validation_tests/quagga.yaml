@@ -56,7 +56,6 @@ resources:
 
   quagga-svr-01:
     type: OS::Nova::Server
-    depends_on: web-svr-01
     properties:
       name: quaga-instance-01
       image: { get_param: quagga_image }
@@ -70,6 +69,24 @@ resources:
         echo "Installing Quagga"
         apt-get update -q -y
         apt-get install -y quagga
+        touch /etc/quagga/bgpd.conf
+        chown quagga.quagga /etc/quagga/bgpd.conf
+        chmod 640 /etc/quagga/bgpd.conf
+        echo "password vmware" >> /etc/quagga/bgpd.conf
+        echo "router bgp 50000" >> /etc/quagga/bgpd.conf
+        echo "bgp router-id 192.168.100.50" >> /etc/quagga/bgpd.conf
+        echo "network 172.16.10.0/24 route-map nexthop" >> /etc/quagga/bgpd.conf
+        echo "network 172.16.20.0/24 route-map nexthop" >> /etc/quagga/bgpd.conf
+        echo "network 172.16.30.0/24 route-map nexthop" >> /etc/quagga/bgpd.conf
+        echo "neighbor 192.168.100.253 remote-as 60000" >> /etc/quagga/bgpd.conf
+        echo "neighbor 192.168.100.253 route-map nexthop out" >> /etc/quagga/bgpd.conf
+        echo "route-map nexthop permit 10" >> /etc/quagga/bgpd.conf
+        echo "set ip next-hop 192.168.100.50" >> /etc/quagga/bgpd.conf
+        echo "%s/bgpd=no/bgpd=yes/g
+        w
+        q
+        " | ex /etc/quagga/daemons
+        /etc/init.d/quagga start
 
 outputs:
   quagga-svr-01_ip:
