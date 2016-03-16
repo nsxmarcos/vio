@@ -287,30 +287,38 @@ resources:
       networks:
         - port: { get_resource: quagga-svr-01_port0 }
       user_data_format: RAW
-      user_data: |
-        #!/bin/bash -ex
-        # install Quagga
-        echo "Installing Quagga"
-        apt-get update -q -y
-        apt-get install -y quagga
-        touch /etc/quagga/bgpd.conf
-        chown quagga.quagga /etc/quagga/bgpd.conf
-        chmod 640 /etc/quagga/bgpd.conf
-        echo "password vmware" >> /etc/quagga/bgpd.conf
-        echo "router bgp 50000" >> /etc/quagga/bgpd.conf
-        echo "bgp router-id 192.168.100.50" >> /etc/quagga/bgpd.conf
-        echo "network 172.16.10.0/24 route-map nexthop" >> /etc/quagga/bgpd.conf
-        echo "network 172.16.20.0/24 route-map nexthop" >> /etc/quagga/bgpd.conf
-        echo "network 172.16.30.0/24 route-map nexthop" >> /etc/quagga/bgpd.conf
-        echo "neighbor 192.168.100.253 remote-as 60000" >> /etc/quagga/bgpd.conf
-        echo "neighbor 192.168.100.253 route-map nexthop out" >> /etc/quagga/bgpd.conf
-        echo "route-map nexthop permit 10" >> /etc/quagga/bgpd.conf
-        echo "set ip next-hop 192.168.100.55" >> /etc/quagga/bgpd.conf
-        echo "%s/bgpd=no/bgpd=yes/g
-        w
-        q
-        " | ex /etc/quagga/daemons
-        /etc/init.d/quagga start
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash -ex
+            # install Quagga
+            echo "Installing Quagga"
+            apt-get update -q -y
+            apt-get install -y quagga
+            touch /etc/quagga/bgpd.conf
+            chown quagga.quagga /etc/quagga/bgpd.conf
+            chmod 640 /etc/quagga/bgpd.conf
+            echo "password vmware" >> /etc/quagga/bgpd.conf
+            echo "router bgp 50000" >> /etc/quagga/bgpd.conf
+            echo "bgp router-id $QuaggaIP" >> /etc/quagga/bgpd.conf
+            echo "network $WebSubnet route-map nexthop" >> /etc/quagga/bgpd.conf
+            echo "network $AppSubnet route-map nexthop" >> /etc/quagga/bgpd.conf
+            echo "network $DBSubnet route-map nexthop" >> /etc/quagga/bgpd.conf
+            echo "neighbor 192.168.100.253 remote-as 60000" >> /etc/quagga/bgpd.conf
+            echo "neighbor 192.168.100.253 route-map nexthop out" >> /etc/quagga/bgpd.conf
+            echo "route-map nexthop permit 10" >> /etc/quagga/bgpd.conf
+            echo "set ip next-hop $RouterIP" >> /etc/quagga/bgpd.conf
+            echo "%s/bgpd=no/bgpd=yes/g
+            w
+            q
+            " | ex /etc/quagga/daemons
+            /etc/init.d/quagga start
+          params:
+            $QuaggaIP: { get_attr: [ quagga-svr-01_port0, fixed_ips, 0, ip_address ] }
+            $RouterIP: { get_attr: [ heat_router_01, external_gateway_info, external_fixed_ips, 0, ip_address ] }
+            $WebSubnet: { get_attr: [ web_subnet_01, cidr ] }
+            $AppSubnet: { get_attr: [ app_subnet_01, cidr ] }
+            $DBSubnet: { get_attr: [ db_subnet_01, cidr ] }
 
 outputs:
   web-svr-01_private_ip:
