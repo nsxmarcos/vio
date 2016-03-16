@@ -88,6 +88,21 @@ parameters:
     label: DB Default gateway
     default: 172.16.30.1
 
+  BGP_Local_AS:
+    type: string
+    label: BGP Local AS
+    default: 50000
+
+  BGP_Remote_AS:
+    type: string
+    label: BGP Remote AS
+    default: "60000"
+
+  BGP_Peer:
+    type: string
+    label: BGP Remote Peer
+    default: 192.168.100.253
+
 resources:
   # Create the web logical switch and configure DHCP.
   web_network_01:
@@ -299,13 +314,13 @@ resources:
             chown quagga.quagga /etc/quagga/bgpd.conf
             chmod 640 /etc/quagga/bgpd.conf
             echo "password vmware" >> /etc/quagga/bgpd.conf
-            echo "router bgp 50000" >> /etc/quagga/bgpd.conf
+            echo "router bgp $LocalAS" >> /etc/quagga/bgpd.conf
             echo "bgp router-id $QuaggaIP" >> /etc/quagga/bgpd.conf
             echo "network $WebSubnet route-map nexthop" >> /etc/quagga/bgpd.conf
             echo "network $AppSubnet route-map nexthop" >> /etc/quagga/bgpd.conf
             echo "network $DBSubnet route-map nexthop" >> /etc/quagga/bgpd.conf
-            echo "neighbor 192.168.100.253 remote-as 60000" >> /etc/quagga/bgpd.conf
-            echo "neighbor 192.168.100.253 route-map nexthop out" >> /etc/quagga/bgpd.conf
+            echo "neighbor $BGPPeer remote-as $RemoteAS" >> /etc/quagga/bgpd.conf
+            echo "neighbor $BGPPeer route-map nexthop out" >> /etc/quagga/bgpd.conf
             echo "route-map nexthop permit 10" >> /etc/quagga/bgpd.conf
             echo "set ip next-hop $RouterIP" >> /etc/quagga/bgpd.conf
             echo "%s/bgpd=no/bgpd=yes/g
@@ -319,6 +334,9 @@ resources:
             $WebSubnet: { get_attr: [ web_subnet_01, cidr ] }
             $AppSubnet: { get_attr: [ app_subnet_01, cidr ] }
             $DBSubnet: { get_attr: [ db_subnet_01, cidr ] }
+            $LocalAS: { get_param: BGP_Local_AS }
+            $RemoteAS: { get_param: BGP_Remote_AS }
+            $BGPPeer: { get_param: BGP_Peer }
 
 outputs:
   web-svr-01_private_ip:
