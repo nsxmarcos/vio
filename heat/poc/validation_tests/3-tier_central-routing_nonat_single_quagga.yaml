@@ -12,19 +12,19 @@ parameters:
     type: string
     label: ext-net
     description: UUID of a Neutron external network
-    default: e70e3478-049d-425a-98f9-bc5ebb29d8c8
+    default: b57874a2-62d3-47dd-b2e3-70f604f390e8
 
   provider_network_id:
     type: string
     label: provider-net
     description: UUID of a Neutron Provider network
-    default: f4c2faec-9618-4f7b-a19a-7a0f198b5bb2
+    default: 935ae7b2-ae58-4f10-875d-6057f64e545c
 
   provider_subnet_id:
     type: string
     label: provider-subnet
     description: UUID of a Neutron Provider subnet
-    default: 8dad5c18-64b7-4706-9ff9-e99edc0287ae
+    default: 8eab48c22-e123-42d5-ac67-8c2f5a1e28f0
 
   web_image:
     type: string
@@ -259,7 +259,7 @@ resources:
     type: OS::Neutron::Port
     properties:
       admin_state_up: true
-      network_id: f4c2faec-9618-4f7b-a19a-7a0f198b5bb2
+      network_id: { get_param: provider_network_id }
       security_groups:
         - { get_resource: quagga_security_group }
 
