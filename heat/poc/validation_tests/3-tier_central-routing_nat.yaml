@@ -14,17 +14,17 @@ parameters:
   web_image:
     type: string
     description: Name of image to use for servers
-    default: Cirros
+    default: ubuntu-14.04-server-amd64
 
   app_image:
     type: string
     description: Name of image to use for servers
-    default: Cirros
+    default: ubuntu-14.04-server-amd64
 
   db_image:
     type: string
     description: Name of image to use for servers
-    default: Cirros
+    default: ubuntu-14.04-server-amd64
 
   flavor:
     type: string
