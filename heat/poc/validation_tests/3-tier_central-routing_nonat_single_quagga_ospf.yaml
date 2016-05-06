@@ -3,34 +3,95 @@ heat_template_version: 2015-04-30
 description: |
   A simple Heat template that spins up a 3 Tier App with 1 Web Server, 1 App Server,
   and 1 DB Server on private networks and attaches them to security groups (HOT template in YAML).
+  Since this is a NO-NAT template this MUST be done by an OpenStack Admin. The template also spins up
+  a Quagga VM on a provider network, on the same L2 as the external network, and starts an eBGP
+  process to establish a dynamic routing adjacency with an external BGP speaker.
 
 parameters:
   external_network_id:
     type: string
     label: ext-net
     description: UUID of a Neutron external network
-    default: 1df41588-8d3d-44b4-9d48-66a327ba3d17
+    default: b57874a2-62d3-47dd-b2e3-70f604f390e8
+
+  provider_network_id:
+    type: string
+    label: provider-net
+    description: UUID of a Neutron Provider network
+    default: 935ae7b2-ae58-4f10-875d-6057f64e545c
+
+  provider_subnet_id:
+    type: string
+    label: provider-subnet
+    description: UUID of a Neutron Provider subnet
+    default: 8eab48c22-e123-42d5-ac67-8c2f5a1e28f0
 
   web_image:
     type: string
     description: Name of image to use for servers
-    default: Cirros
+    default: ubuntu-14.04-server-amd64
 
   app_image:
     type: string
     description: Name of image to use for servers
-    default: Cirros
+    default: ubuntu-14.04-server-amd64
 
   db_image:
     type: string
     description: Name of image to use for servers
-    default: Cirros
+    default: ubuntu-14.04-server-amd64
+
+  quagga_image:
+    type: string
+    description: Name of image to use for servers
+    default: ubuntu-14.04-server-amd64
 
   flavor:
     type: string
     label: Flavor name
     description: Name of the flavor to be used for the instances.
     default: m1.small
+
+  dns:
+    type: string
+    label: DNS nameserver
+    description: Comma separated list of DNS nameservers for the private network
+    default: 10.148.152.8
+
+  web_cidr:
+    type: string
+    label: Web Subnet
+    default: 172.16.10.0/24
+
+  web_gateway:
+    type: string
+    label: Web Default gateway
+    default: 172.16.10.1
+
+  app_cidr:
+    type: string
+    label: App Subnet
+    default: 172.16.20.0/24
+
+  app_gateway:
+    type: string
+    label: App Default gateway
+    default: 172.16.20.1
+
+  db_cidr:
+    type: string
+    label: DB Subnet
+    default: 172.16.30.0/24
+
+  db_gateway:
+    type: string
+    label: DB Default gateway
+    default: 172.16.30.1
+
+  OSPF_NSSA:
+    type: string
+    label: OSPF NSSA
+    default: 51
 
 resources:
   # Create the web logical switch and configure DHCP.
@@ -43,10 +104,10 @@ resources:
     type: OS::Neutron::Subnet
     properties:
       name: web-subnet-01
-      cidr: 172.16.10.0/24
-      dns_nameservers: [8.8.8.8]
+      cidr: { get_param: web_cidr }
       enable_dhcp: true
-      gateway_ip: 172.16.10.1
+      dns_nameservers: [ { get_param: dns } ]
+      gateway_ip: { get_param: web_gateway }
       network_id: { get_resource: web_network_01 }
 
   # Create the app logical switch and configure DHCP.
@@ -59,10 +120,10 @@ resources:
     type: OS::Neutron::Subnet
     properties:
       name: app-subnet-01
-      cidr: 172.16.20.0/24
-      dns_nameservers: [8.8.8.8]
+      cidr: { get_param: app_cidr }
+      dns_nameservers: [ { get_param: dns } ]
       enable_dhcp: true
-      gateway_ip: 172.16.20.1
+      gateway_ip: { get_param: app_gateway }
       network_id: { get_resource: app_network_01 }
 
   # Create the db logical switch and configure DHCP.
@@ -75,10 +136,10 @@ resources:
     type: OS::Neutron::Subnet
     properties:
       name: db-subnet-01
-      cidr: 172.16.30.0/24
-      dns_nameservers: [8.8.8.8]
+      cidr: { get_param: db_cidr }
+      dns_nameservers: [ { get_param: dns } ]
       enable_dhcp: true
-      gateway_ip: 172.16.30.1
+      gateway_ip: { get_param: db_gateway }
       network_id: { get_resource: db_network_01 }
 
   # Create router, add internal interfaces for 3 tiers, and also an uplink.
@@ -86,8 +147,9 @@ resources:
     type: OS::Neutron::Router
     properties:
       name: heat-router-01
+      value_specs: {router_type: exclusive}
       admin_state_up: true
-      external_gateway_info: { "network": { get_param: external_network_id }}
+      external_gateway_info: { "enable_snat": false, "network": { get_param: external_network_id }}
   heat_router_int0:
     type: OS::Neutron::RouterInterface
     properties:
@@ -104,7 +166,7 @@ resources:
       router_id: { get_resource: heat_router_01 }
       subnet_id: { get_resource: db_subnet_01 }
 
-  # Create security groups for the tiers.
+  # Create security groups for the tiers and the Quagga VM.
   db_security_group:
     type: OS::Neutron::SecurityGroup
     properties:
@@ -115,6 +177,8 @@ resources:
           protocol: tcp
           port_range_min: 3306
           port_range_max: 3306
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
 
   web_security_group:
     type: OS::Neutron::SecurityGroup
@@ -130,6 +194,8 @@ resources:
           protocol: tcp
           port_range_min: 22
           port_range_max: 22
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
 
   app_security_group:
     type: OS::Neutron::SecurityGroup
@@ -141,6 +207,15 @@ resources:
           protocol: tcp
           port_range_min: 8443
           port_range_max: 8443
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+
+  quagga_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Allow all traffic
+      name: quagga-security-group
+      rules: [{direction: ingress, remote_ip_prefix: 0.0.0.0/0, port_range_min: 0, port_range_max: 65535, protocol: tcp} ]
 
   # Create ports on web switch.
   web-svr-01_port0:
@@ -150,11 +225,6 @@ resources:
       network_id: { get_resource: web_network_01 }
       security_groups:
         - { get_resource: web_security_group }
-  web-svr-01_floating_ip:
-    type: OS::Neutron::FloatingIP
-    properties:
-      floating_network_id: {get_param: external_network_id}
-      port_id: { get_resource: web-svr-01_port0 }
 
   # Create port(s) on app switch.
   app-svr-01_port0:
@@ -173,6 +243,15 @@ resources:
       network_id: { get_resource: db_network_01 }
       security_groups:
         - { get_resource: db_security_group }
+
+  # Create port(s) on Provider Network.
+  quagga-svr-01_port0:
+    type: OS::Neutron::Port
+    properties:
+      admin_state_up: true
+      network_id: { get_param: provider_network_id }
+      security_groups:
+        - { get_resource: quagga_security_group }
 
   # Provision instances.
   db-svr-01:
@@ -204,10 +283,57 @@ resources:
       networks:
         - port: { get_resource: web-svr-01_port0 }
 
+  quagga-svr-01:
+    type: OS::Nova::Server
+    properties:
+      name: quaga-instance-01
+      image: { get_param: quagga_image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: quagga-svr-01_port0 }
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash -ex
+            # install Quagga
+            echo "Installing Quagga"
+            apt-get update -q -y
+            apt-get install -y quagga
+            touch /etc/quagga/ospfd.conf
+            chown quagga.quagga /etc/quagga/ospfd.conf
+            chmod 640 /etc/quagga/ospfd.conf
+            echo "password vmware" >> /etc/quagga/ospfd.conf
+            echo "router ospf" >> /etc/quagga/ospfd.conf
+            echo "network $WebSubnet area $OSPFArea" >> /etc/quagga/ospfd.conf
+            echo "network $AppSubnet area $OSPFArea" >> /etc/quagga/ospfd.conf
+            echo "network $DBSubnet area $OSPFArea" >> /etc/quagga/ospfd.conf
+            echo "%s/ospfd=no/ospfd=yes/g
+            w
+            q
+            " | ex /etc/quagga/daemons
+            /etc/init.d/quagga start
+          params:
+            $QuaggaIP: { get_attr: [ quagga-svr-01_port0, fixed_ips, 0, ip_address ] }
+            $RouterIP: { get_attr: [ heat_router_01, external_gateway_info, external_fixed_ips, 0, ip_address ] }
+            $WebSubnet: { get_attr: [ web_subnet_01, cidr ] }
+            $AppSubnet: { get_attr: [ app_subnet_01, cidr ] }
+            $DBSubnet: { get_attr: [ db_subnet_01, cidr ] }
+            $OSPFArea: { get_param: OSPF_NSSA }
+
 outputs:
   web-svr-01_private_ip:
     description: IP address of web-svr-01 in private network
     value: { get_attr: [ web-svr-01, first_address ] }
-  web-svr-01_public_ip:
-    description: Floating IP address of web-svr-01 in public network
-    value: { get_attr: [ web-svr-01_floating_ip, floating_ip_address ] }
+
+  app-svr-01_private_ip:
+    description: IP address of app-svr-01 in private network
+    value: { get_attr: [ app-svr-01, first_address ] }
+
+  db-svr-01_private_ip:
+    description: IP address of db-svr-01 in private network
+    value: { get_attr: [ db-svr-01, first_address ] }
+
+  quagga-svr-01_ip:
+    description: IP address of Quagga instance
+    value: { get_attr: [ quagga-svr-01, first_address ] }

@@ -1,0 +1,355 @@
+heat_template_version: 2015-04-30
+
+description: |
+  A simple Heat template that spins up a 3 Tier App with 1 Web Server, 1 App Server,
+  and 1 DB Server on private networks and attaches them to security groups (HOT template in YAML).
+  Since this is a NO-NAT template this MUST be done by an OpenStack Admin. The template also spins up
+  a Quagga VM on a provider network, on the same L2 as the external network, and starts an eBGP
+  process to establish a dynamic routing adjacency with an external BGP speaker.
+
+parameters:
+  external_network_id:
+    type: string
+    label: ext-net
+    description: UUID of a Neutron external network
+    default: b57874a2-62d3-47dd-b2e3-70f604f390e8
+
+  provider_network_id:
+    type: string
+    label: provider-net
+    description: UUID of a Neutron Provider network
+    default: 935ae7b2-ae58-4f10-875d-6057f64e545c
+
+  provider_subnet_id:
+    type: string
+    label: provider-subnet
+    description: UUID of a Neutron Provider subnet
+    default: 8eab48c22-e123-42d5-ac67-8c2f5a1e28f0
+
+  web_image:
+    type: string
+    description: Name of image to use for servers
+    default: ubuntu-14.04-server-amd64
+
+  app_image:
+    type: string
+    description: Name of image to use for servers
+    default: ubuntu-14.04-server-amd64
+
+  db_image:
+    type: string
+    description: Name of image to use for servers
+    default: ubuntu-14.04-server-amd64
+
+  quagga_image:
+    type: string
+    description: Name of image to use for servers
+    default: ubuntu-14.04-server-amd64
+
+  flavor:
+    type: string
+    label: Flavor name
+    description: Name of the flavor to be used for the instances.
+    default: m1.small
+
+  dns:
+    type: string
+    label: DNS nameserver
+    description: Comma separated list of DNS nameservers for the private network
+    default: 10.148.152.8
+
+  web_cidr:
+    type: string
+    label: Web Subnet
+    default: 172.16.10.0/24
+
+  web_gateway:
+    type: string
+    label: Web Default gateway
+    default: 172.16.10.1
+
+  app_cidr:
+    type: string
+    label: App Subnet
+    default: 172.16.20.0/24
+
+  app_gateway:
+    type: string
+    label: App Default gateway
+    default: 172.16.20.1
+
+  db_cidr:
+    type: string
+    label: DB Subnet
+    default: 172.16.30.0/24
+
+  db_gateway:
+    type: string
+    label: DB Default gateway
+    default: 172.16.30.1
+
+  BGP_Local_AS:
+    type: string
+    label: BGP Local AS
+    default: 50000
+
+  BGP_Remote_AS:
+    type: string
+    label: BGP Remote AS
+    default: "60000"
+
+  BGP_Peer:
+    type: string
+    label: BGP Remote Peer
+    default: 192.168.100.253
+
+  Neutron_Router:
+    type: string
+    label: Neutron Router
+    constraints:
+      - custom_constraint: neutron.router
+
+resources:
+  # Create the web logical switch and configure DHCP.
+  web_network_01:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: web-network-01
+  web_subnet_01:
+    type: OS::Neutron::Subnet
+    properties:
+      name: web-subnet-01
+      cidr: { get_param: web_cidr }
+      enable_dhcp: true
+      dns_nameservers: [ { get_param: dns } ]
+      gateway_ip: { get_param: web_gateway }
+      network_id: { get_resource: web_network_01 }
+
+  # Create the app logical switch and configure DHCP.
+  app_network_01:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: app-network-01
+  app_subnet_01:
+    type: OS::Neutron::Subnet
+    properties:
+      name: app-subnet-01
+      cidr: { get_param: app_cidr }
+      dns_nameservers: [ { get_param: dns } ]
+      enable_dhcp: true
+      gateway_ip: { get_param: app_gateway }
+      network_id: { get_resource: app_network_01 }
+
+  # Create the db logical switch and configure DHCP.
+  db_network_01:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: db-network-01
+  db_subnet_01:
+    type: OS::Neutron::Subnet
+    properties:
+      name: db-subnet-01
+      cidr: { get_param: db_cidr }
+      dns_nameservers: [ { get_param: dns } ]
+      enable_dhcp: true
+      gateway_ip: { get_param: db_gateway }
+      network_id: { get_resource: db_network_01 }
+
+  # Create router, add internal interfaces for 3 tiers, and also an uplink.
+  heat_router_int0:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_param: Neutron_Router }
+      subnet_id: { get_resource: web_subnet_01 }
+  heat_router_int1:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_param: Neutron_Router }
+      subnet_id: { get_resource: app_subnet_01 }
+  heat_router_int2:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_param: Neutron_Router }
+      subnet_id: { get_resource: db_subnet_01 }
+
+  # Create security groups for the tiers and the Quagga VM.
+  db_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Allow sql traffic from web tier
+      name: db-security-group
+      rules:
+        - remote_ip_prefix: { get_attr: [ app_subnet_01, cidr ] }
+          protocol: tcp
+          port_range_min: 3306
+          port_range_max: 3306
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+
+  web_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Allow web traffic from anywhere
+      name: web-security-group
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 80
+          port_range_max: 80
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+
+  app_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Allow app traffic from web tier
+      name: app-security-group
+      rules:
+        - remote_ip_prefix: { get_attr: [ web_subnet_01, cidr ] }
+          protocol: tcp
+          port_range_min: 8443
+          port_range_max: 8443
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+
+  quagga_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Allow all traffic
+      name: quagga-security-group
+      rules: [{direction: ingress, remote_ip_prefix: 0.0.0.0/0, port_range_min: 0, port_range_max: 65535, protocol: tcp} ]
+
+  # Create ports on web switch.
+  web-svr-01_port0:
+    type: OS::Neutron::Port
+    properties:
+      admin_state_up: true
+      network_id: { get_resource: web_network_01 }
+      security_groups:
+        - { get_resource: web_security_group }
+
+  # Create port(s) on app switch.
+  app-svr-01_port0:
+    type: OS::Neutron::Port
+    properties:
+      admin_state_up: true
+      network_id: { get_resource: app_network_01 }
+      security_groups:
+        - { get_resource: app_security_group }
+
+  # Create port(s) on db switch.
+  db-svr-01_port0:
+    type: OS::Neutron::Port
+    properties:
+      admin_state_up: true
+      network_id: { get_resource: db_network_01 }
+      security_groups:
+        - { get_resource: db_security_group }
+
+  # Create port(s) on Provider Network.
+  quagga-svr-01_port0:
+    type: OS::Neutron::Port
+    properties:
+      admin_state_up: true
+      network_id: { get_param: provider_network_id }
+      security_groups:
+        - { get_resource: quagga_security_group }
+
+  # Provision instances.
+  db-svr-01:
+    type: OS::Nova::Server
+    properties:
+      name: db-instance-01
+      image: { get_param: db_image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: db-svr-01_port0 }
+
+  app-svr-01:
+    type: OS::Nova::Server
+    depends_on: db-svr-01
+    properties:
+      name: app-instance-01
+      image: { get_param: app_image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: app-svr-01_port0 }
+
+  web-svr-01:
+    type: OS::Nova::Server
+    depends_on: app-svr-01
+    properties:
+      name: web-instance-01
+      image: { get_param: web_image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: web-svr-01_port0 }
+
+  quagga-svr-01:
+    type: OS::Nova::Server
+    properties:
+      name: quaga-instance-01
+      image: { get_param: quagga_image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: quagga-svr-01_port0 }
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash -ex
+            # install Quagga
+            echo "Installing Quagga"
+            apt-get update -q -y
+            apt-get install -y quagga
+            touch /etc/quagga/bgpd.conf
+            chown quagga.quagga /etc/quagga/bgpd.conf
+            chmod 640 /etc/quagga/bgpd.conf
+            echo "password vmware" >> /etc/quagga/bgpd.conf
+            echo "router bgp $LocalAS" >> /etc/quagga/bgpd.conf
+            echo "bgp router-id $QuaggaIP" >> /etc/quagga/bgpd.conf
+            echo "network $WebSubnet route-map nexthop" >> /etc/quagga/bgpd.conf
+            echo "network $AppSubnet route-map nexthop" >> /etc/quagga/bgpd.conf
+            echo "network $DBSubnet route-map nexthop" >> /etc/quagga/bgpd.conf
+            echo "neighbor $BGPPeer remote-as $RemoteAS" >> /etc/quagga/bgpd.conf
+            echo "neighbor $BGPPeer route-map nexthop out" >> /etc/quagga/bgpd.conf
+            echo "route-map nexthop permit 10" >> /etc/quagga/bgpd.conf
+            echo "set ip next-hop $RouterIP" >> /etc/quagga/bgpd.conf
+            echo "%s/bgpd=no/bgpd=yes/g
+            w
+            q
+            " | ex /etc/quagga/daemons
+            /etc/init.d/quagga start
+          params:
+            $QuaggaIP: { get_attr: [ quagga-svr-01_port0, fixed_ips, 0, ip_address ] }
+            $RouterIP: { get_attr: [ heat_router_01, external_gateway_info, external_fixed_ips, 0, ip_address ] }
+            $WebSubnet: { get_attr: [ web_subnet_01, cidr ] }
+            $AppSubnet: { get_attr: [ app_subnet_01, cidr ] }
+            $DBSubnet: { get_attr: [ db_subnet_01, cidr ] }
+            $LocalAS: { get_param: BGP_Local_AS }
+            $RemoteAS: { get_param: BGP_Remote_AS }
+            $BGPPeer: { get_param: BGP_Peer }
+
+outputs:
+  web-svr-01_private_ip:
+    description: IP address of web-svr-01 in private network
+    value: { get_attr: [ web-svr-01, first_address ] }
+
+  app-svr-01_private_ip:
+    description: IP address of app-svr-01 in private network
+    value: { get_attr: [ app-svr-01, first_address ] }
+
+  db-svr-01_private_ip:
+    description: IP address of db-svr-01 in private network
+    value: { get_attr: [ db-svr-01, first_address ] }
+
+  quagga-svr-01_ip:
+    description: IP address of Quagga instance
+    value: { get_attr: [ quagga-svr-01, first_address ] }
