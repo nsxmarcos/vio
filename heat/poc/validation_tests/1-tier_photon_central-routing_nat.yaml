@@ -10,12 +10,12 @@ parameters:
     type: string
     label: ext-net
     description: UUID of a Neutron external network
-    default: fdb92e61-75e4-47ef-9b74-557af5b6147d
+    default: b57874a2-62d3-47dd-b2e3-70f604f390e8
 
   container_image:
     type: string
     description: Name of image to use for servers
-    default: photon
+    default: Photon-Image
 
   container_name:
     type: string
