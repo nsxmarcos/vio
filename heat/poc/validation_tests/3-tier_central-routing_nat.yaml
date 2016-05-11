@@ -38,7 +38,7 @@ resources:
     type: OS::Neutron::Net
     properties:
       admin_state_up: true
-      name: BBVA-Web
+      name: USBank-Web
   web_subnet_01:
     type: OS::Neutron::Subnet
     properties:
@@ -54,7 +54,7 @@ resources:
     type: OS::Neutron::Net
     properties:
       admin_state_up: true
-      name: BBVA-App
+      name: USBank-App
   app_subnet_01:
     type: OS::Neutron::Subnet
     properties:
@@ -70,7 +70,7 @@ resources:
     type: OS::Neutron::Net
     properties:
       admin_state_up: true
-      name: BBVA-DB
+      name: USBank-DB
   db_subnet_01:
     type: OS::Neutron::Subnet
     properties:
@@ -85,7 +85,7 @@ resources:
   heat_router_01:
     type: OS::Neutron::Router
     properties:
-      name: BBVA-Router
+      name: USBank-Router
       admin_state_up: true
       external_gateway_info: { "network": { get_param: external_network_id }}
   heat_router_int0:
