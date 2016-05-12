@@ -32,10 +32,10 @@ parameters:
     description: Name of the flavor to be used for the instances.
     default: m1.nano
 
-    kvm_az:
-      type: string
-      description: availability zone for KVM instances
-      default: KVM
+  kvm_az:
+    type: string
+    description: availability zone for KVM instances
+    default: KVM
 
 resources:
   # Create the web logical switch and configure DHCP.
