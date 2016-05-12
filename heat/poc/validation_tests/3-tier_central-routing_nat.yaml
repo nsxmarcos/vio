@@ -49,7 +49,7 @@ resources:
     properties:
       name: web-subnet-01
       cidr: 172.16.10.0/24
-      dns_nameservers: [8.8.8.8]
+      dns_nameservers: [10.148.152.8]
       enable_dhcp: true
       gateway_ip: 172.16.10.1
       network_id: { get_resource: web_network_01 }
@@ -65,7 +65,7 @@ resources:
     properties:
       name: app-subnet-01
       cidr: 172.16.20.0/24
-      dns_nameservers: [8.8.8.8]
+      dns_nameservers: [10.148.152.8]
       enable_dhcp: true
       gateway_ip: 172.16.20.1
       network_id: { get_resource: app_network_01 }
@@ -81,7 +81,7 @@ resources:
     properties:
       name: db-subnet-01
       cidr: 172.16.30.0/24
-      dns_nameservers: [8.8.8.8]
+      dns_nameservers: [10.148.152.8]
       enable_dhcp: true
       gateway_ip: 172.16.30.1
       network_id: { get_resource: db_network_01 }
