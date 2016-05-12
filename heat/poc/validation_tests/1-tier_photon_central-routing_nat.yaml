@@ -10,7 +10,7 @@ parameters:
     type: string
     label: ext-net
     description: UUID of a Neutron external network
-    default: b57874a2-62d3-47dd-b2e3-70f604f390e8
+    default: 4b3f9a19-3872-4e7a-b89b-36306c95fa60
 
   container_image:
     type: string
@@ -26,7 +26,7 @@ parameters:
     type: string
     label: Flavor
     description: Type of instance (flavor) to be used on the compute instance.
-    default: m1.small
+    default: m1.tiny
 
   dns:
     type: string
