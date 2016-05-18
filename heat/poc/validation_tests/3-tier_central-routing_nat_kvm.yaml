@@ -9,28 +9,33 @@ parameters:
     type: string
     label: ext-net
     description: UUID of a Neutron external network
-    default: 2d0bef59-e8a1-4225-9c13-eaba03384055
+    default: 4b3f9a19-3872-4e7a-b89b-36306c95fa60
 
   web_image:
     type: string
     description: Name of image to use for servers
-    default: ubuntu-14.04-server-amd64
+    default: cirros-0.3.4-x86_64-disk.vmdk
 
   app_image:
     type: string
     description: Name of image to use for servers
-    default: ubuntu-14.04-server-amd64
+    default: cirros-0.3.4-x86_64-disk.vmdk
 
   db_image:
     type: string
     description: Name of image to use for servers
-    default: ubuntu-14.04-server-amd64
+    default: cirros-0.3.4-x86_64-disk.vmdk
 
   flavor:
     type: string
     label: Flavor name
     description: Name of the flavor to be used for the instances.
-    default: m1.small
+    default: m1.nano
+
+  kvm_az:
+    type: string
+    description: availability zone for KVM instances
+    default: KVM
 
 resources:
   # Create the web logical switch and configure DHCP.
@@ -181,6 +186,7 @@ resources:
       name: db-instance-01
       image: { get_param: db_image }
       flavor: { get_param: flavor }
+      availability_zone: {get_param: kvm_az}
       networks:
         - port: { get_resource: db-svr-01_port0 }
 
