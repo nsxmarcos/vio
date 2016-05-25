@@ -118,7 +118,7 @@ outputs:
     description: IP address of the Minecraft Server
     value:
       str_replace:
-        template: Point yout client to host:25565
+        template: Point your Minecraft client to host:25565
         params:
           host: { get_attr: [ container0_floating_ip, floating_ip_address ] }
 
