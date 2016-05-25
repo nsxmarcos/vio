@@ -20,7 +20,7 @@ parameters:
   container_name:
     type: string
     description: Name of Docker Hub container to use
-    default: vmwarecna/nginx
+    default: overshard/minecraft
 
   flavor:
     type: string
@@ -66,17 +66,13 @@ resources:
   container_security_group:
     type: OS::Neutron::SecurityGroup
     properties:
-      description: Allow web and SSH traffic from anywhere
+      description: Allow all TCP and ICMP traffic from anywhere
       name: container-security-group
       rules:
         - remote_ip_prefix: 0.0.0.0/0
           protocol: tcp
-          port_range_min: 80
-          port_range_max: 80
-        - remote_ip_prefix: 0.0.0.0/0
-          protocol: tcp
-          port_range_min: 22
-          port_range_max: 22
+          port_range_min: 1
+          port_range_max: 65000
         - remote_ip_prefix: 0.0.0.0/0
           protocol: icmp
 
@@ -105,9 +101,11 @@ resources:
           template: |
             #!/bin/bash
             set -ux
-
-            docker pull __container__
-            docker run -d -p 80:80 __container__
+            tdnf install git -y
+            git clone https://github.com/overshard/docker-minecraft
+            cd docker-minecraft
+            docker build -t overshard/minecraft .
+            docker run -d=true -p=25565:25565 -v=/mnt/minecraft:/data overshard/minecraft /start
   # Attach floating IP
   container0_floating_ip:
     type: OS::Neutron::FloatingIP
@@ -117,10 +115,10 @@ resources:
 
 outputs:
   WebsiteURL:
-    description: URL for the Container
+    description: IP address of the Minecraft Server
     value:
       str_replace:
-        template: http://host/
+        template: Point yout client to host:25565
         params:
           host: { get_attr: [ container0_floating_ip, floating_ip_address ] }
 
