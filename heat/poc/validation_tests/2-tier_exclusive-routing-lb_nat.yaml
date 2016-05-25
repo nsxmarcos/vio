@@ -10,7 +10,7 @@ parameters:
     type: string
     label: ext-net
     description: UUID of a Neutron external network
-    default: fdb92e61-75e4-47ef-9b74-557af5b6147d
+    default: 2d0bef59-e8a1-4225-9c13-eaba03384055
 
   db_image:
     type: string
@@ -254,4 +254,3 @@ outputs:
   web2_public_ip:
     description: Floating IP address of Web1 on the public network
     value: { get_attr: [ web2_floating_ip, floating_ip_address ] }
-

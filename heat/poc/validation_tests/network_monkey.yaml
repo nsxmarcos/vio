@@ -1,0 +1,131 @@
+heat_template_version: 2015-04-30
+
+description: |
+  Sample heat template to deploy hundreds or thousands of logical switches.
+
+resources:
+  container_net0:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net0
+
+  container_net1:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net1
+
+  container_net2:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net2
+
+  container_net3:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net3
+
+  container_net4:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net4
+
+  container_net5:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net5
+
+  container_net6:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net6
+
+  container_net7:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container_net7
+
+  container_net8:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net8
+
+  container_net9:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net9
+
+  container_net10:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net10
+
+  container_net11:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net11
+
+  container_net12:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net12
+
+  container_net13:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net13
+
+  container_net14:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net14
+
+  container_net15:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net15
+
+  container_net16:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net16
+
+  container_net17:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container_net17
+
+  container_net18:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net18
+
+  container_net19:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net19
+
+  container_net20:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: container-net20
