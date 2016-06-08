@@ -15,7 +15,7 @@ parameters:
   container_image:
     type: string
     description: Name of image to use for servers
-    default: Photon-Container
+    default: Photon-Image
 
   container_name:
     type: string
