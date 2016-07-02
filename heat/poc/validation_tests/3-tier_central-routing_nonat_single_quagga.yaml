@@ -88,6 +88,11 @@ parameters:
     label: DB Default gateway
     default: 172.16.30.1
 
+  Quagga_Password:
+    type: string
+    label: Quagga Password
+    default: vmware
+
   BGP_Local_AS:
     type: string
     label: BGP Local AS
@@ -312,8 +317,8 @@ resources:
             apt-get install -y quagga
             touch /etc/quagga/bgpd.conf
             chown quagga.quagga /etc/quagga/bgpd.conf
-            chmod 640 /etc/quagga/bgpd.conf
-            echo "password vmware" >> /etc/quagga/bgpd.conf
+            chmod 600 /etc/quagga/bgpd.conf
+            echo "password $QuaggaPassword" >> /etc/quagga/bgpd.conf
             echo "router bgp $LocalAS" >> /etc/quagga/bgpd.conf
             echo "bgp router-id $QuaggaIP" >> /etc/quagga/bgpd.conf
             echo "network $WebSubnet route-map nexthop" >> /etc/quagga/bgpd.conf
@@ -337,6 +342,7 @@ resources:
             $LocalAS: { get_param: BGP_Local_AS }
             $RemoteAS: { get_param: BGP_Remote_AS }
             $BGPPeer: { get_param: BGP_Peer }
+            $QuaggaPassword: { get_param: Quagga_Password }
 
 outputs:
   web-svr-01_private_ip:
