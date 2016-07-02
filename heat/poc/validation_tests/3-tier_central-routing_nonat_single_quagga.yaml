@@ -12,13 +12,13 @@ parameters:
     type: string
     label: ext-net
     description: UUID of a Neutron external network
-    default: b57874a2-62d3-47dd-b2e3-70f604f390e8
+    default: 0790525b-0781-403d-abd1-716ff9dfb592
 
   provider_network_id:
     type: string
     label: provider-net
     description: UUID of a Neutron Provider network
-    default: 935ae7b2-ae58-4f10-875d-6057f64e545c
+    default: 695ac88e-3ff1-49b2-bee7-c286640c35e8
 
   provider_subnet_id:
     type: string
@@ -96,7 +96,7 @@ parameters:
   BGP_Local_AS:
     type: string
     label: BGP Local AS
-    default: 50000
+    default: "50000"
 
   BGP_Remote_AS:
     type: string
@@ -106,7 +106,7 @@ parameters:
   BGP_Peer:
     type: string
     label: BGP Remote Peer
-    default: 192.168.100.253
+    default: 192.168.100.254
 
 resources:
   # Create the web logical switch and configure DHCP.
