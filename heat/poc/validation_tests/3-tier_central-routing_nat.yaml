@@ -9,7 +9,7 @@ parameters:
     type: string
     label: ext-net
     description: UUID of a Neutron external network
-    default: 6bbbee39-8f79-4a23-9dd0-0c51d68e1aa1
+    default: 5c6ab0b4-889d-49a2-abdc-2f2a8c55102c
 
   web_image:
     type: string
@@ -38,7 +38,7 @@ resources:
     type: OS::Neutron::Net
     properties:
       admin_state_up: true
-      name: NSX-T-Web
+      name: AA-Web
   web_subnet_01:
     type: OS::Neutron::Subnet
     properties:
@@ -54,7 +54,7 @@ resources:
     type: OS::Neutron::Net
     properties:
       admin_state_up: true
-      name: NSX-T-App
+      name: AA-App
   app_subnet_01:
     type: OS::Neutron::Subnet
     properties:
@@ -70,7 +70,7 @@ resources:
     type: OS::Neutron::Net
     properties:
       admin_state_up: true
-      name: NSX-T-DB
+      name: AA-DB
   db_subnet_01:
     type: OS::Neutron::Subnet
     properties:
@@ -85,7 +85,7 @@ resources:
   heat_router_01:
     type: OS::Neutron::Router
     properties:
-      name: NSX-T-Router
+      name: AA-Router
       admin_state_up: true
       external_gateway_info: { "network": { get_param: external_network_id }}
   heat_router_int0:

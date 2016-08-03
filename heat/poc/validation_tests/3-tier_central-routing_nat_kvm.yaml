@@ -43,7 +43,7 @@ resources:
     type: OS::Neutron::Net
     properties:
       admin_state_up: true
-      name: NSX-T-Web
+      name: AA-Web
   web_subnet_01:
     type: OS::Neutron::Subnet
     properties:
@@ -59,7 +59,7 @@ resources:
     type: OS::Neutron::Net
     properties:
       admin_state_up: true
-      name: NSX-T-App
+      name: AA-App
   app_subnet_01:
     type: OS::Neutron::Subnet
     properties:
@@ -75,7 +75,7 @@ resources:
     type: OS::Neutron::Net
     properties:
       admin_state_up: true
-      name: NSX-T-DB
+      name: AA-DB
   db_subnet_01:
     type: OS::Neutron::Subnet
     properties:
@@ -90,7 +90,7 @@ resources:
   heat_router_01:
     type: OS::Neutron::Router
     properties:
-      name: NSX-T-Router
+      name: AA-Router
       admin_state_up: true
       external_gateway_info: { "network": { get_param: external_network_id }}
   heat_router_int0:
