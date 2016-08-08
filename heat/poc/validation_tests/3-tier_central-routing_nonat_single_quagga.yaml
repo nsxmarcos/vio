@@ -317,7 +317,7 @@ resources:
             apt-get install -y quagga
             touch /etc/quagga/bgpd.conf
             chown quagga.quagga /etc/quagga/bgpd.conf
-            chmod 600 /etc/quagga/bgpd.conf
+            chmod 640 /etc/quagga/bgpd.conf
             echo "password $QuaggaPassword" >> /etc/quagga/bgpd.conf
             echo "router bgp $LocalAS" >> /etc/quagga/bgpd.conf
             echo "bgp router-id $QuaggaIP" >> /etc/quagga/bgpd.conf
