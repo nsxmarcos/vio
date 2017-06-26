@@ -9,22 +9,22 @@ parameters:
     type: string
     label: ext-net
     description: UUID of a Neutron external network
-    default: d7925ff9-862d-4f1a-935b-d819307e8334
+    default: 5bd836d0-f2d4-42c4-9833-c9a676be2522
 
   web_image:
     type: string
     description: Name of image to use for servers
-    default: ubuntu-14.04-server-amd64
+    default: ubuntu-16.04.1-server-amd64
 
   app_image:
     type: string
     description: Name of image to use for servers
-    default: ubuntu-14.04-server-amd64
+    default: ubuntu-16.04.1-server-amd64
 
   db_image:
     type: string
     description: Name of image to use for servers
-    default: ubuntu-14.04-server-amd64
+    default: ubuntu-16.04.1-server-amd64
 
   flavor:
     type: string
@@ -38,7 +38,7 @@ resources:
     type: OS::Neutron::Net
     properties:
       admin_state_up: true
-      name: Sample-Web
+      name: Web
   web_subnet_01:
     type: OS::Neutron::Subnet
     properties:
@@ -54,7 +54,7 @@ resources:
     type: OS::Neutron::Net
     properties:
       admin_state_up: true
-      name: Sample-App
+      name: App
   app_subnet_01:
     type: OS::Neutron::Subnet
     properties:
@@ -70,7 +70,7 @@ resources:
     type: OS::Neutron::Net
     properties:
       admin_state_up: true
-      name: Sample-DB
+      name: DB
   db_subnet_01:
     type: OS::Neutron::Subnet
     properties:
@@ -85,7 +85,7 @@ resources:
   heat_router_01:
     type: OS::Neutron::Router
     properties:
-      name: Sample-Router
+      name: MyRouter
       admin_state_up: true
       external_gateway_info: { "network": { get_param: external_network_id }}
   heat_router_int0:
