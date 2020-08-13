@@ -1,0 +1,171 @@
+heat_template_version: 2015-04-30
+
+description: |
+  A simple Heat template that spins up a 3 Tier App with 1 Web Server, 1 App Server,
+  and 1 DB Server on private networks and attaches them to security groups (HOT template in YAML).
+
+parameters:
+  web_image:
+    type: string
+    description: Name of image to use for servers
+    default: Photon 3.0
+
+  app_image:
+    type: string
+    description: Name of image to use for servers
+    default: Photon 3.0
+    
+  db_image:
+    type: string
+    description: Name of image to use for servers
+    default: Photon 3.0
+
+  flavor:
+    type: string
+    label: Flavor name
+    description: Name of the flavor to be used for the instances.
+    default: m1.small
+
+resources:
+  # Create the web logical switch and configure DHCP.
+  web_network_01:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: Web
+  web_subnet_01:
+    type: OS::Neutron::Subnet
+    properties:
+      name: web-subnet-01
+      cidr: 172.16.10.0/24
+      dns_nameservers: [10.148.152.8]
+      enable_dhcp: true
+      gateway_ip: 172.16.10.1
+      network_id: { get_resource: web_network_01 }
+
+  # Create the app logical switch and configure DHCP.
+  app_network_01:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: App
+  app_subnet_01:
+    type: OS::Neutron::Subnet
+    properties:
+      name: app-subnet-01
+      cidr: 172.16.20.0/24
+      dns_nameservers: [10.148.152.8]
+      enable_dhcp: true
+      gateway_ip: 172.16.20.1
+      network_id: { get_resource: app_network_01 }
+
+  # Create the db logical switch and configure DHCP.
+  db_network_01:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: true
+      name: DB
+  db_subnet_01:
+    type: OS::Neutron::Subnet
+    properties:
+      name: db-subnet-01
+      cidr: 172.16.30.0/24
+      dns_nameservers: [10.148.152.8]
+      enable_dhcp: true
+      gateway_ip: 172.16.30.1
+      network_id: { get_resource: db_network_01 }
+
+  # Create security groups for the tiers.
+  db_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Allow sql traffic from web tier
+      name: db-security-group
+      rules:
+        - remote_ip_prefix: { get_attr: [ app_subnet_01, cidr ] }
+          protocol: tcp
+          port_range_min: 3306
+          port_range_max: 3306
+
+  web_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Allow web traffic from anywhere
+      name: web-security-group
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 80
+          port_range_max: 80
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+
+  app_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Allow app traffic from web tier
+      name: app-security-group
+      rules:
+        - remote_ip_prefix: { get_attr: [ web_subnet_01, cidr ] }
+          protocol: tcp
+          port_range_min: 8443
+          port_range_max: 8443
+
+  # Create ports on web switch.
+  web-svr-01_port0:
+    type: OS::Neutron::Port
+    properties:
+      admin_state_up: true
+      network_id: { get_resource: web_network_01 }
+      security_groups:
+        - { get_resource: web_security_group }
+
+  # Create port(s) on app switch.
+  app-svr-01_port0:
+    type: OS::Neutron::Port
+    properties:
+      admin_state_up: true
+      network_id: { get_resource: app_network_01 }
+      security_groups:
+        - { get_resource: app_security_group }
+
+  # Create port(s) on db switch.
+  db-svr-01_port0:
+    type: OS::Neutron::Port
+    properties:
+      admin_state_up: true
+      network_id: { get_resource: db_network_01 }
+      security_groups:
+        - { get_resource: db_security_group }
+
+  # Provision instances.
+  db-svr-01:
+    type: OS::Nova::Server
+    properties:
+      name: db-instance-01
+      image: { get_param: db_image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: db-svr-01_port0 }
+
+  app-svr-01:
+    type: OS::Nova::Server
+    depends_on: db-svr-01
+    properties:
+      name: app-instancee-01
+      image: { get_param: app_image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: app-svr-01_port0 }
+
+  web-svr-01:
+    type: OS::Nova::Server
+    depends_on: app-svr-01
+    properties:
+      name: web-instance-01
+      image: { get_param: web_image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: web-svr-01_port0 }
