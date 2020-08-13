@@ -5,12 +5,6 @@ description: |
   and 1 DB Server on private networks and attaches them to security groups (HOT template in YAML).
 
 parameters:
-  external_network_id:
-    type: string
-    label: external-network
-    description: UUID of a Neutron external network
-    default: 2fcc7558-86ad-44bf-814b-cc4ced43c951
-
   web_image:
     type: string
     description: Name of image to use for servers
@@ -80,29 +74,6 @@ resources:
       enable_dhcp: true
       gateway_ip: 172.16.30.1
       network_id: { get_resource: db_network_01 }
-
-  # Create router, add internal interfaces for 3 tiers, and also an uplink.
-  heat_router_01:
-    type: OS::Neutron::Router
-    properties:
-      name: MyRouter
-      admin_state_up: true
-      external_gateway_info: { "network": { get_param: external_network_id }}
-  heat_router_int0:
-    type: OS::Neutron::RouterInterface
-    properties:
-      router_id: { get_resource: heat_router_01 }
-      subnet_id: { get_resource: web_subnet_01 }
-  heat_router_int1:
-    type: OS::Neutron::RouterInterface
-    properties:
-      router_id: { get_resource: heat_router_01 }
-      subnet_id: { get_resource: app_subnet_01 }
-  heat_router_int2:
-    type: OS::Neutron::RouterInterface
-    properties:
-      router_id: { get_resource: heat_router_01 }
-      subnet_id: { get_resource: db_subnet_01 }
 
   # Create security groups for the tiers.
   db_security_group:
