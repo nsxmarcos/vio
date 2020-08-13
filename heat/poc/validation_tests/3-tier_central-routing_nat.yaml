@@ -7,24 +7,24 @@ description: |
 parameters:
   external_network_id:
     type: string
-    label: ext-net
+    label: external-network
     description: UUID of a Neutron external network
-    default: 5bd836d0-f2d4-42c4-9833-c9a676be2522
+    default: 2fcc7558-86ad-44bf-814b-cc4ced43c951
 
   web_image:
     type: string
     description: Name of image to use for servers
-    default: ubuntu-16.04.1-server-amd64
+    default: 931d576-d863-4ded-b428-9904b9913801
 
   app_image:
     type: string
     description: Name of image to use for servers
-    default: ubuntu-16.04.1-server-amd64
+    default: 931d576-d863-4ded-b428-9904b9913801
 
   db_image:
     type: string
     description: Name of image to use for servers
-    default: ubuntu-16.04.1-server-amd64
+    default: 931d576-d863-4ded-b428-9904b9913801
 
   flavor:
     type: string
