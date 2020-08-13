@@ -121,11 +121,6 @@ resources:
       network_id: { get_resource: web_network_01 }
       security_groups:
         - { get_resource: web_security_group }
-  web-svr-01_floating_ip:
-    type: OS::Neutron::FloatingIP
-    properties:
-      floating_network_id: {get_param: external_network_id}
-      port_id: { get_resource: web-svr-01_port0 }
 
   # Create port(s) on app switch.
   app-svr-01_port0:
@@ -174,11 +169,3 @@ resources:
       flavor: { get_param: flavor }
       networks:
         - port: { get_resource: web-svr-01_port0 }
-
-outputs:
-  web-svr-01_private_ip:
-    description: IP adress of web-svr-01 in private network
-    value: { get_attr: [ web-svr-01, first_address ] }
-  web-svr-01_public_ip:
-    description: Floating IP address of web-svr-01 in public network
-    value: { get_attr: [ web-svr-01_floating_ip, floating_ip_address ] }
