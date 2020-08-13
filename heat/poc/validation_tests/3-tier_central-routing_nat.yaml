@@ -206,7 +206,7 @@ resources:
 
 outputs:
   web-svr-01_private_ip:
-    description: IP address of web-svr-01 in private network
+    description: IP adress of web-svr-01 in private network
     value: { get_attr: [ web-svr-01, first_address ] }
   web-svr-01_public_ip:
     description: Floating IP address of web-svr-01 in public network
