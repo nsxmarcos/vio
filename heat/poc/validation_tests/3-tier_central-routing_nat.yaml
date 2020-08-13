@@ -154,7 +154,7 @@ resources:
     type: OS::Nova::Server
     depends_on: db-svr-01
     properties:
-      name: app-instance-01
+      name: app-instancee-01
       image: { get_param: app_image }
       flavor: { get_param: flavor }
       networks:
