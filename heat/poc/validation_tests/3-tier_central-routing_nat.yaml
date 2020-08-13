@@ -8,17 +8,17 @@ parameters:
   web_image:
     type: string
     description: Name of image to use for servers
-    default: 931d576-d863-4ded-b428-9904b9913801
+    default: Photon 3.0
 
   app_image:
     type: string
     description: Name of image to use for servers
-    default: 931d576-d863-4ded-b428-9904b9913801
-
+    default: Photon 3.0
+    
   db_image:
     type: string
     description: Name of image to use for servers
-    default: 931d576-d863-4ded-b428-9904b9913801
+    default: Photon 3.0
 
   flavor:
     type: string
